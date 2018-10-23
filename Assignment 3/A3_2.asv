@@ -1,0 +1,31 @@
+im_source = im2double(imread('data/penguin.jpeg'));
+im_target = im2double(imread('data/hiking.jpg'));
+im_s = imresize(im_source, 0.25, 'bilinear');
+im_t = imresize(im_target, 0.25, 'bilinear');
+
+mask = getMask(im_s);
+[im_s2, mask2] = alignSource(im_s, mask, im_t);
+[height, width, c] = size(im_s2);
+im2var = zeros(height, width);
+im2var(1:height*width) = 1:height*width;
+
+cnt=0;
+A = sparse(height*width, height*width);
+b = zeros(height*width, c);
+
+for i=1:height
+    for j=1:width
+        cnt = cnt+1;
+        if mask2(i,j)
+            A(cnt,im2var(i,j)) = 4;
+            A(cnt,im2var(i, j-1)) = -1;
+            A(cnt,im2var(i, j+1)) = -1;
+            A(cnt,im2var(i-1, j)) = -1;
+            A(cnt,im2var(i+1, j)) = -1;
+            b(cnt,:) = 4 * aligned_source_image(i, j, :) - aligned_source_image(i, j-1, :) - aligned_source_image(i, j+1, :) - aligned_source_image(i-1, j, :) - aligned_source_image(i+1, j, :);
+        else
+            A(e, im2var(i, j)) = 1;
+            b(e, :) = target_image(i, j, :);
+        end
+    end
+end

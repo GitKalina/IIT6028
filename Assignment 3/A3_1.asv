@@ -1,0 +1,35 @@
+im = imread('data/toy_problem.png');
+[height, width] = size(im); % 110*119
+im_ = double(im);
+im2var = zeros(height,width);
+im2var(1:height*width) = 1:height*width;
+
+cnt = 0;
+A = sparse(((height*(width-1))+(height-1)*width)+1, height*width);
+
+height_ = height-1; % gradient image -> -1
+width_ = width-1; % gradient image -> -1
+var = zeros(height, width, 'uint32');
+var(1:height*width) = 1:height*width;
+gradient = zeros(height_, width_, 'uint32');
+gradient(1:height_*width_) = 1:height_*width_;
+
+% (Av-b)
+A = zeros(height_*width_+1, height*width);
+b = zeros(height_*width_+1, 1);
+for i=1:height_
+    for j=1:width_
+        A(gradient(i,j), var(i,j)) = 2;
+        A(gradient(i,j), var(i+1,j)) = -1;
+        A(gradient(i,j), var(i,j+1)) = -1;
+        b(gradient(i,j)) = 2*im_(i,j,1)-im_(i+1,j,1)-im_(i,j+1,1);
+    end
+end
+A(height_*width_+1, var(1,1)) = 1;
+b(height_*width_+1) = im_(1,1,1);
+v = A \ b;
+
+% result
+toy_problem = reshape(v, height, width, 1);
+%plot(toy_problem/256.);
+imwrite(toy_problem/256., 'toy_problem.png');
